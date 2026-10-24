@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CivicFix - Road Hazard & Infrastructure Tracker</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f6f8; color: #333; }
+        header { background-color: #1a252f; color: #fff; padding: 1.5rem; text-align: center; }
+        header h1 { margin-bottom: 0.5rem; font-size: 2rem; }
+        .container { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
+        .card { background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .card h2 { margin-bottom: 1rem; color: #2c3e50; font-size: 1.3rem; border-bottom: 2px solid #eee; padding-bottom: 0.5rem; }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
+        select, input[type="file"], input[type="text"], button { width: 100%; padding: 0.8rem; border: 1px solid #ccc; border-radius: 5px; font-size: 1rem; }
+        button { background-color: #e74c3c; color: white; border: none; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+        button:hover { background-color: #c0392b; }
+        .hazard-list { list-style: none; }
+        .hazard-item { background: #fff5f5; border-left: 4px solid #e74c3c; padding: 1rem; margin-bottom: 0.8rem; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+        .hazard-item.streetlight { background: #fffde7; border-left-color: #f1c40f; }
+        .badge { padding: 0.3rem 0.6rem; border-radius: 12px; font-size: 0.8rem; font-weight: bold; color: #fff; background-color: #e74c3c; }
+        .badge.warning { background-color: #f1c40f; color: #333; }
+        .gps-btn { background-color: #3498db; margin-bottom: 1rem; }
+        .gps-btn:hover { background-color: #2980b9; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🚨 CivicFix Alert Portal</h1>
+        <p>Real-Time Road Hazard & Infrastructure Failure System</p>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h2>📱 Report Hazard (Mobile / Driver App)</h2>
+            <form id="hazardForm">
+                <div class="form-group">
+                    <label for="type">Issue Type</label>
+                    <select id="type" required>
+                        <option value="Pothole">🕳️ Pothole / Road Damage</option>
+                        <option value="Streetlight">💡 Streetlight Failure</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button type="button" class="gps-btn" onclick="getLocation()">📍 Detect My Location (GPS)</button>
+                    <input type="text" id="location" placeholder="GPS Coordinates" readonly required>
+                </div>
+                <div class="form-group">
+                    <label for="photo">Upload Photo</label>
+                    <input type="file" id="photo" accept="image/*" required>
+                </div>
+                <button type="submit">Submit Report to Database</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>🚗 Driver Alerts & Active Issues</h2>
+            <ul class="hazard-list" id="hazardList">
+                <li class="hazard-item">
+                    <div>
+                        <strong>Pothole Detected (500m ahead)</strong><br>
+                        <small>Coords: 19.0760° N, 72.8777° E</small>
+                    </div>
+                    <span class="badge">DANGER</span>
+                </li>
+                <li class="hazard-item streetlight">
+                    <div>
+                        <strong>Streetlight Dark Zone</strong><br>
+                        <small>Coords: 19.0820° N, 72.8810° E</small>
+                    </div>
+                    <span class="badge warning">WARNING</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function getLocation() {
+            const locInput = document.getElementById('location');
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        locInput.value = `${pos.coords.latitude.toFixed(4)}° N, ${pos.coords.longitude.toFixed(4)}° E`;
+                    },
+                    () => {
+                        locInput.value = "19.0760° N, 72.8777° E (Simulated Location)";
+                    }
+                );
+            } else {
+                locInput.value = "Geolocation not supported";
+            }
+        }
+
+        document.getElementById('hazardForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const type = document.getElementById('type').value;
+            const location = document.getElementById('location').value;
+            const list = document.getElementById('hazardList');
+
+            const li = document.createElement('li');
+            li.className = `hazard-item ${type === 'Streetlight' ? 'streetlight' : ''}`;
+            li.innerHTML = `
+                <div>
+                    <strong>${type === 'Streetlight' ? 'Streetlight Dark Zone' : 'Pothole Detected (New)'}</strong><br>
+                    <small>Coords: ${location}</small>
+                </div>
+                <span class="badge ${type === 'Streetlight' ? 'warning' : ''}">${type === 'Streetlight' ? 'WARNING' : 'DANGER'}</span>
+            `;
+            
+            list.prepend(li);
+            alert("Report successfully added to database!");
+            this.reset();
+        });
+    </script>
+</body>
+</html>
